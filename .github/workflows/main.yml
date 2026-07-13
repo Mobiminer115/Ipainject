@@ -1,0 +1,115 @@
+name: Build and verify iOS app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-tests:
+    name: Core unit tests
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Validate repository layout
+        run: bash scripts/check_project.sh
+
+      - name: Run ForgeCore tests
+        run: swift test --parallel
+
+  unsigned-ipa:
+    name: Build unsigned IPA
+    runs-on: macos-15
+    timeout-minutes: 35
+    needs: core-tests
+    env:
+      DERIVED_DATA: ${{ runner.temp }}/IPAPayloadLab-DerivedData
+      PACKAGE_DIR: ${{ runner.temp }}/IPAPayloadLab-Package
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Install XcodeGen
+        run: |
+          brew update
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild \
+            -project IPAPayloadLab.xcodeproj \
+            -scheme IPAPayloadLab \
+            -resolvePackageDependencies
+
+      - name: Compile for iOS Simulator
+        run: |
+          xcodebuild \
+            -project IPAPayloadLab.xcodeproj \
+            -scheme IPAPayloadLab \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$DERIVED_DATA-simulator" \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build
+
+      - name: Compile release app for iPhone
+        run: |
+          xcodebuild \
+            -project IPAPayloadLab.xcodeproj \
+            -scheme IPAPayloadLab \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' \
+            clean build
+
+      - name: Package and verify unsigned IPA
+        run: |
+          bash scripts/package_unsigned.sh \
+            "$DERIVED_DATA/Build/Products/Release-iphoneos/IPAPayloadLab.app" \
+            "$PACKAGE_DIR" \
+            "$RUNNER_TEMP/IPAPayloadLab-unsigned.ipa"
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: IPAPayloadLab-unsigned
+          path: ${{ runner.temp }}/IPAPayloadLab-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-diagnostics
+          path: |
+            ${{ env.DERIVED_DATA }}/Logs
+            ${{ env.DERIVED_DATA }}-simulator/Logs
+          if-no-files-found: ignore
+          retention-days: 7
