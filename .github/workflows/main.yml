@@ -61,6 +61,8 @@ jobs:
 
       - name: Compile for iOS Simulator
         run: |
+          set -o pipefail
+          mkdir -p "$GITHUB_WORKSPACE/.build/ci"
           xcodebuild \
             -project IPAPayloadLab.xcodeproj \
             -scheme IPAPayloadLab \
@@ -69,10 +71,13 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$GITHUB_WORKSPACE/.build/ci/IPAPayloadLab-DerivedData-simulator" \
             CODE_SIGNING_ALLOWED=NO \
-            clean build
+            clean build \
+            2>&1 | tee "$GITHUB_WORKSPACE/.build/ci/simulator-build.log"
 
       - name: Compile release app for iPhone
         run: |
+          set -o pipefail
+          mkdir -p "$GITHUB_WORKSPACE/.build/ci"
           xcodebuild \
             -project IPAPayloadLab.xcodeproj \
             -scheme IPAPayloadLab \
@@ -83,7 +88,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY='' \
-            clean build
+            clean build \
+            2>&1 | tee "$GITHUB_WORKSPACE/.build/ci/iphone-build.log"
 
       - name: Package and verify unsigned IPA
         run: |
@@ -106,6 +112,8 @@ jobs:
         with:
           name: build-diagnostics
           path: |
+            .build/ci/simulator-build.log
+            .build/ci/iphone-build.log
             .build/ci/IPAPayloadLab-DerivedData/Logs
             .build/ci/IPAPayloadLab-DerivedData-simulator/Logs
           if-no-files-found: ignore
