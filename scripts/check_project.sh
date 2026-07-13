@@ -9,7 +9,7 @@ required=(
   Sources/ForgeCore/TarArchive.swift
   Sources/IPAPayloadLab/App/IPAPayloadLabApp.swift
   Sources/IPAPayloadLab/Info.plist
-  .github/workflows/build.yml
+  .github/workflows/main.yml
 )
 
 for path in "${required[@]}"; do

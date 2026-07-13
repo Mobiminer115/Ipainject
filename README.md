@@ -30,6 +30,8 @@ IPA Payload Lab là ứng dụng SwiftUI chạy trên iPhone/iPad để nhúng m
 3. Workflow sẽ chạy unit test lõi, compile cho iOS Simulator, compile Release cho iPhone, kiểm tra bundle/ZIP rồi đăng artifact `IPAPayloadLab-unsigned`.
 4. Tải artifact và giải nén để lấy `IPAPayloadLab-unsigned.ipa`.
 
+Workflow nằm tại `.github/workflows/main.yml`. Các đường dẫn tạm chỉ được mở rộng bên trong shell step, sau khi runner đã khởi tạo; vì vậy file không dùng context `runner` trong `env` cấp workflow hoặc job.
+
 Workflow cố ý không nhận hoặc lưu chứng thư ký. Muốn có IPA cài được, hãy ký artifact bằng tài khoản Apple Developer và provisioning profile của chính bạn trong môi trường ký tin cậy.
 
 ## Build cục bộ
