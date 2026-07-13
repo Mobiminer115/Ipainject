@@ -32,6 +32,12 @@ for key in ("CFBundleIdentifier", "CFBundleExecutable", "CFBundleVersion"):
 
 for path in Path("Resources/Assets.xcassets").rglob("Contents.json"):
     json.loads(path.read_text(encoding="utf-8"))
+
+project = Path("project.yml").read_text(encoding="utf-8")
+if "exactVersion: 4.9." in project:
+    raise SystemExit("SWCompression 4.9.x requires iOS 17 but this project targets iOS 16")
+if "exactVersion: 4.8.7" not in project:
+    raise SystemExit("Expected the iOS 16-compatible SWCompression 4.8.7 pin")
 PY
 
 if find Sources Tests -type f -name '*.swift' -print0 | xargs -0 grep -n $'\t' >/dev/null; then

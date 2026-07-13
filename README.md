@@ -47,7 +47,7 @@ open IPAPayloadLab.xcodeproj
 Chọn Team và Bundle Identifier của bạn trong target `IPAPayloadLab`, sau đó build lên thiết bị. Hai dependency được khóa trong `project.yml`:
 
 - ZIPFoundation 0.9.20
-- SWCompression 4.9.0
+- SWCompression 4.8.7 (giữ deployment target iOS 16; dòng 4.9.x yêu cầu iOS 17)
 
 ## Kiểm thử
 

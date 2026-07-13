@@ -21,7 +21,8 @@ packages:
     exactVersion: 0.9.20
   SWCompression:
     url: https://github.com/tsolomko/SWCompression.git
-    exactVersion: 4.9.0
+    # 4.9.x requires iOS 17. Keep 4.8.7 so this iOS 16 target can build.
+    exactVersion: 4.8.7
 
 targets:
   ForgeCore:
