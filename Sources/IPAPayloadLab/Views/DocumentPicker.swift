@@ -15,11 +15,20 @@ struct DocumentPicker: UIViewControllerRepresentable {
         let types: [UTType]
         switch request {
         case .ipa:
-            types = [.ipaPayloadLabIPA, .zip]
+            // File providers do not consistently advertise .ipa as ZIP or as
+            // our imported UTI. Let the user select any file and validate the
+            // extension/archive after the picker returns it.
+            types = [.item]
         case .payload:
-            types = [.ipaPayloadLabDylib, .ipaPayloadLabDeb, .ipaPayloadLabFramework, .folder, .item]
+            // .item keeps dylib/deb/framework packages selectable even when a
+            // provider reports only public.data; .folder permits flat framework
+            // directories exposed as ordinary folders.
+            types = [.item, .folder]
         }
-        let controller = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: false)
+        // Import a provider-managed copy instead of requesting open-in-place.
+        // StagingService immediately copies it into this app's own temporary
+        // workspace before inspection or patching.
+        let controller = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
         controller.delegate = context.coordinator
         controller.allowsMultipleSelection = false
         controller.shouldShowFileExtensions = true
