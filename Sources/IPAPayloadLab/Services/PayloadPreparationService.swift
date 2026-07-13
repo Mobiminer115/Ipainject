@@ -71,7 +71,7 @@ enum PayloadPreparationService {
             throw ForgeError.invalidArchive("data.tar giải nén vượt 2 GiB")
         }
 
-        let entries = try TarArchive.open(tarData)
+        let entries = try ForgeCore.TarArchive.open(tarData)
         let frameworkRoots = Set(entries.compactMap { frameworkRoot(in: $0.path) }).sorted()
         let dylibPaths = entries.compactMap { entry -> String? in
             guard entry.kind == .file,
@@ -183,7 +183,11 @@ enum PayloadPreparationService {
         return components[...index].joined(separator: "/")
     }
 
-    private static func materializeFramework(root: String, entries: [TarEntry], destination: URL) throws {
+    private static func materializeFramework(
+        root: String,
+        entries: [ForgeCore.TarEntry],
+        destination: URL
+    ) throws {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
         let prefix = root + "/"
