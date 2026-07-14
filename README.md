@@ -5,6 +5,7 @@ IPA Payload Lab là ứng dụng SwiftUI chạy trên iPhone/iPad để nhúng m
 ## Chức năng
 
 - Nhập IPA từ Files, kiểm tra ZIP path traversal, số entry và kích thước giải nén trước khi xử lý.
+- Picker cho phép chọn file từ mọi Files provider rồi mới kiểm tra định dạng, tránh IPA/DEB/dylib bị làm mờ do provider báo UTI không đồng nhất; file được nhập dưới dạng bản sao trước khi staging.
 - Tự tìm executable chính và executable của các app extension (`.appex`) để người dùng chọn.
 - Nhận `dylib`, thư mục `.framework`, hoặc `deb` chứa `data.tar`, `data.tar.gz`, `data.tar.xz`.
 - Chọn vị trí nhúng: cạnh executable hoặc trong `Frameworks` của đúng bundle đích.

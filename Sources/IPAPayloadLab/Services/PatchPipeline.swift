@@ -106,17 +106,14 @@ enum PatchPipeline {
         to directory: URL,
         replaceExisting: Bool
     ) throws -> URL {
-        guard !asset.name.contains("/"),
-              (try? PathPolicy.sanitizedArchivePath(asset.name)) == asset.name else {
-            throw ForgeError.unsafePath(asset.name)
-        }
+        let safeName = try PathPolicy.validateFileName(asset.name)
 
         let fileManager = FileManager.default
         let existing = try fileManager.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
-        ).first { $0.lastPathComponent.caseInsensitiveCompare(asset.name) == .orderedSame }
+        ).first { $0.lastPathComponent.caseInsensitiveCompare(safeName) == .orderedSame }
         if let existing {
             guard replaceExisting else {
                 throw ForgeError.io("đích đã có \(existing.lastPathComponent); bật “Ghi đè” nếu muốn thay")
@@ -124,9 +121,11 @@ enum PatchPipeline {
             try fileManager.removeItem(at: existing)
         }
 
-        let destination = directory.appendingPathComponent(asset.name, isDirectory: asset.kind == .framework)
-        guard destination.standardizedFileURL.path.hasPrefix(directory.standardizedFileURL.path + "/") else {
-            throw ForgeError.unsafePath(asset.name)
+        let destination = directory.appendingPathComponent(safeName, isDirectory: asset.kind == .framework)
+        let expectedParent = directory.standardizedFileURL.pathComponents
+        let actualParent = destination.deletingLastPathComponent().standardizedFileURL.pathComponents
+        guard actualParent == expectedParent else {
+            throw ForgeError.unsafePath(safeName)
         }
         do {
             try fileManager.copyItem(at: asset.sourceURL, to: destination)
@@ -135,7 +134,7 @@ enum PatchPipeline {
                 : destination
             try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: embeddedExecutable.path)
         } catch {
-            throw ForgeError.io("không nhúng được \(asset.name): \(error.localizedDescription)")
+            throw ForgeError.io("không nhúng được \(safeName): \(error.localizedDescription)")
         }
         return destination
     }

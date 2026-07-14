@@ -6,6 +6,9 @@
 - Parsed `project.yml` and the GitHub Actions workflow as YAML.
 - Verified that workflow/job-level expressions use only contexts available before a runner starts; temporary paths are resolved inside shell steps from GitHub's default environment variables.
 - Verified that the pinned SWCompression 4.8.7 package supports iOS 11+, which is compatible with this project's iOS 16 deployment target. SWCompression 4.9.x is intentionally not used because it requires iOS 17.
+- Qualified `ForgeCore.TarEntry` and `ForgeCore.TarArchive` at the app-module boundary so Swift cannot confuse the core TAR model with SWCompression's public `TarEntry` type.
+- Configured the document picker with broad `UTType.item`/`UTType.folder` filters and copy mode; strict extension and archive validation remains in the staging/services layer.
+- Replaced fragile URL-prefix string comparison for copied payloads with a dedicated single-file-name validator plus parent `pathComponents` equality; ordinary names such as `GameBoost.dylib` are accepted while traversal/separator/control-character names remain rejected.
 - Parsed `Info.plist` and every asset-catalog `Contents.json`.
 - Verified the app icon is an opaque 1024×1024 RGB PNG.
 - Ran repository layout and shell syntax checks.

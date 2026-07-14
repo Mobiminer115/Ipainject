@@ -3,6 +3,21 @@ import Foundation
 public enum PathPolicy {
     private static let loaderRoots = ["@rpath", "@executable_path", "@loader_path"]
 
+    public static func validateFileName(_ name: String) throws -> String {
+        guard !name.isEmpty,
+              name.utf8.count <= 255,
+              name != ".",
+              name != "..",
+              !name.contains("/"),
+              !name.contains("\\"),
+              !name.contains(":"),
+              !name.contains("\0"),
+              !name.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else {
+            throw ForgeError.unsafePath(name)
+        }
+        return name
+    }
+
     public static func sanitizedArchivePath(_ rawPath: String) throws -> String {
         guard !rawPath.isEmpty, rawPath.utf8.count <= 4_096 else {
             throw ForgeError.unsafePath(rawPath)
